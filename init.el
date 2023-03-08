@@ -80,7 +80,8 @@
           :which-key
           (lambda (arg)
             (cons (cadr (split-string (car arg) " "))
-                  (replace-regexp-in-string "-mode$" "" (symbol-name major-mode)))))))
+                  (replace-regexp-in-string "-mode$" "" (symbol-name major-mode))))))
+   )
 (elpaca-wait)
 
 ;; Basic customization
@@ -136,7 +137,21 @@
 
   ;; Enable recursive minibuffers
   (setq enable-recursive-minibuffers t))
-  
+
+(use-package flymake
+  :elpaca nil
+  :general
+  (general-define-key
+     :keymaps 'override
+     :states '(normal hybrid motion visual operator emacs)
+    "]d" 'flymake-goto-next-error
+    "[d" 'flymake-goto-prev-error
+    )
+  (global-definer
+    "db"   'flymake-show-buffer-diagnostics
+    "dp"   'flymake-show-project-diagnostics
+    "ds"   'consult-flymake)
+)
 
 ;; Persist history over Emacs restarts. Vertico sorts by history position.
 (use-package savehist
@@ -171,6 +186,8 @@
   (evil-want-C-u-delete t)
   (evil-want-Y-yank-to-eol t)
   (evil-want-integration t)
+  :init
+  (setq evil-undo-system 'undo-fu)
   :config
   (defun +evil-kill-minibuffer ()
     (interactive)
@@ -180,6 +197,12 @@
   (add-hook 'mouse-leave-buffer-hook #'+evil-kill-minibuffer)
   (define-key evil-motion-state-map [down-mouse-1] nil)
   (evil-mode))
+
+(use-package undo-fu)
+(use-package undo-fu-session
+  :init
+  (undo-fu-session-global-mode)
+)
 
 (use-package evil-collection
   :after (evil)
