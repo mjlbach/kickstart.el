@@ -46,6 +46,7 @@
   (setq elpaca-use-package-by-default t))
 
 (elpaca-wait)
+
 ;; Set up keybindings
 (use-package general
   :demand t
@@ -78,189 +79,29 @@
 )
 (elpaca-wait)
 
-(use-package evil-terminal-cursor-changer
-  :config
-    (unless (display-graphic-p)
-      (require 'evil-terminal-cursor-changer)
-      (evil-terminal-cursor-changer-activate)))
+;; Remove tool and menu bar
+(tool-bar-mode -1)
+(menu-bar-mode -1)
 
-;;   (defmacro +general-global-menu! (name infix-key &rest body)
-;;     "Create a definer named +general-global-NAME wrapping global-definer.
-;;     Create prefix map: +general-global-NAME. Prefix bindings in BODY with INFIX-KEY."
-;;     (declare (indent 2))
-;;     (let* ((n (concat "+general-global-" name))
-;;            (prefix (intern (concat n "-map"))))
-;;       `(progn
-;;          (general-create-definer ,(intern n)
-;;            :wrapping global-definer
-;;            :prefix-map (quote ,prefix)
-;;            :infix ,infix-key
-;;            :wk-full-keys nil
-;;            "" '(:ignore t :which-key ,name))
-;;          (,(intern n) ,@body))))
-;;   (+general-global-menu! "application" "a"
-;;     "p" '(:ignore t "elpaca")
-;;     "pb" 'elpaca-browse
-;;     "pr"  '((lambda () (interactive)
-;;               (let ((current-prefix-arg (not current-prefix-arg)))
-;;                 (call-interactively #'elpaca-rebuild)))
-;;             :which-key "rebuild")
-;;     "pm" 'elpaca-manager
-;;     "pl" 'elpaca-log
-;;     "pi" 'elpaca-info
-;;     "pI" '((lambda () (interactive) (info "Elpaca"))
-;;            :which-key "elpaca-info")
-;;     "ps" 'elpaca-status
-;;     "pt" 'elpaca-try
-;;     "pv" 'elpaca-visit)
-;;   (+general-global-menu! "buffer" "b"
-;;     "d"  'kill-current-buffer
-;;     "o" '((lambda () (interactive) (switch-to-buffer nil))
-;;           :which-key "other-buffer")
-;;     "p"  'previous-buffer
-;;     "r"  'rename-buffer
-;;     "R"  'revert-buffer
-;;     "M" '((lambda () (interactive) (switch-to-buffer "*Messages*"))
-;;           :which-key "messages-buffer")
-;;     "n"  'next-buffer
-;;     "s" '((lambda () (interactive) (switch-to-buffer "*scratch*"))
-;;           :which-key "scratch-buffer")
-;;     "TAB" '((lambda () (interactive) (switch-to-buffer nil))
-;;             :which-key "other-buffer"))
-;;   (+general-global-menu! "bookmark" "B")
-;;   (+general-global-menu! "eval" "e"
-;;     "b" 'eval-buffer
-;;     "d" 'eval-defun
-;;     "e" 'eval-expression
-;;     "p" 'pp-eval-last-sexp
-;;     "s" 'eval-last-sexp)
-;;   (+general-global-menu! "file" "f"
-;;     "d"   '((lambda (&optional arg)
-;;               (interactive "P")
-;;               (let ((buffer (when arg (current-buffer))))
-;;                 (diff-buffer-with-file buffer))) :which-key "diff-with-file")
-;;     "e"   '(:ignore t :which-key "edit")
-;;     "ed"  '((lambda () (interactive) (find-file-existing literate-file) (widen))
-;;             :which-key "dotfile")
-;;     "eR"  '((lambda () (interactive) (load-file user-init-file))
-;;             :which-key "reload-init.el")
-;;     "et"  '((lambda ()
-;;               (interactive)
-;;               (save-restriction
-;;                 (widen)
-;;                 (check-parens)
-;;                 (org-babel-tangle-file literate-file))
-;;               (load-file "~/.emacs.d/init.el"))
-;;             :which-key "tangle/reload-init.el")
-;;     "l"   '((lambda (&optional arg)
-;;               (interactive "P")
-;;               (call-interactively (if arg #'find-library-other-window #'find-library)))
-;;             :which-key "+find-library")
-;;     "p"   'find-function-at-point
-;;     "P"   'find-function
-;;     "R"   'rename-file-and-buffer
-;;     "s"   'save-buffer
-;;     "v"   'find-variable-at-point
-;;     "V"   'find-variable)
-;;   (+general-global-menu! "frame" "F"
-;;     "D" 'delete-other-frames
-;;     "F" 'select-frame-by-name
-;;     "O" 'other-frame-prefix
-;;     "c" '(:ingore t :which-key "color")
-;;     "cb" 'set-background-color
-;;     "cc" 'set-cursor-color
-;;     "cf" 'set-foreground-color
-;;     "f" 'set-frame-font
-;;     "m" 'make-frame-on-monitor
-;;     "n" 'next-window-any-frame
-;;     "o" 'other-frame
-;;     "p" 'previous-window-any-frame
-;;     "r" 'set-frame-name)
-;;   (+general-global-menu! "git/version-control" "g")
-;;   (+general-global-menu! "help" "h"
-;;     "d"   '(:ignore t :which-key "describe")
-;;     "df"  'describe-function
-;;     "dF"  'describe-face
-;;     "dk"  'describe-key
-;;     "dt"  '((lambda () (interactive) (describe-text-properties (point)))
-;;             :which-key "describe-text-properties")
-;;     "dv"  'describe-variable
-;;     "h"   (general-simulate-key "C-h" :which-key "help"))
-;;   (+general-global-menu! "link" "l")
-;;   (+general-global-menu! "narrow" "n"
-;;     "d" 'narrow-to-defun
-;;     "p" 'narrow-to-page
-;;     "r" 'narrow-to-region
-;;     "w" 'widen)
-;;   (+general-global-menu! "project" "p"
-;;     "b" '(:ignore t :which-key "buffer"))
-;;   (+general-global-menu! "quit" "q"
-;;     "q" 'save-buffers-kill-emacs
-;;     "r" 'restart-emacs
-;;     "Q" 'kill-emacs)
-;;   (+general-global-menu! "spelling" "s")
-;;   (+general-global-menu! "text" "x"
-;;     "i" 'insert-char
-;;     "I" (general-simulate-key "C-x 8" :which-key "iso"))
-;;   
-;;   (+general-global-menu! "tab" "t")
-;;   (+general-global-menu! "toggle" "T"
-;;     "d" '(:ignore t :which-key "debug")
-;;     "de" 'toggle-debug-on-error
-;;     "dq" 'toggle-debug-on-quit
-;;     "s" '(:ignore t :which-key "spelling"))
-;;   (+general-global-menu! "window" "w"
-;;     "?" 'split-window-vertically
-;;     "=" 'balance-windows
-;;     "/" 'split-window-horizontally
-;;     "O" 'delete-other-windows
-;;     "X" '((lambda () (interactive) (call-interactively #'other-window) (kill-buffer-and-window))
-;;           :which-key "kill-other-buffer-and-window")
-;;     "d" 'delete-window
-;;     "h" 'windmove-left
-;;     "j" 'windmove-down
-;;     "k" 'windmove-up
-;;     "l" 'windmove-right
-;;     "o" 'other-window
-;;     "t" '((lambda () (interactive)
-;;             "toggle window dedication"
-;;             (set-window-dedicated-p (selected-window) (not (window-dedicated-p))))
-;;           :which-key "toggle window dedication")
-;;     "."  '(:ingore :which-key "resize")
-;;     ".h" '((lambda () (interactive)
-;;              (call-interactively (if (window-prev-sibling) #'enlarge-window-horizontally
-;;                                    #'shrink-window-horizontally)))
-;;            :which-key "divider left")
-;;     ".l" '((lambda () (interactive)
-;;              (call-interactively (if (window-next-sibling) #'enlarge-window-horizontally
-;;                                    #'shrink-window-horizontally)))
-;;            :which-key "divider right")
-;;     ".j" '((lambda () (interactive)
-;;              (call-interactively (if (window-next-sibling) #'enlarge-window #'shrink-window)))
-;;            :which-key "divider up")
-;;     ".k" '((lambda () (interactive)
-;;              (call-interactively (if (window-prev-sibling) #'enlarge-window #'shrink-window)))
-;;            :which-key "divider down")
-;;     "x" 'kill-buffer-and-window)
-;;   ;;vim-like completion
-;;   (general-create-definer completion-def
-;;     :prefix "C-x"))
-;;
-;; Block until current queue processed.
+;; Preserve cursor position on screen
+(setq scroll-preserve-screen-position 'always)
+
+;; Display line numbers
+(global-display-line-numbers-mode)
+
+;; Enable mouse mode in terminal
+(unless (display-graphic-p)
+  (xterm-mouse-mode 1))
+
+(use-package exec-path-from-shell
+  ;; :elpaca (:repo "")
+  :config
+    (when (memq window-system '(mac ns x))
+    (exec-path-from-shell-initialize)))
 
 (use-package evil
   :demand t
   :preface (setq evil-want-keybinding nil)
-  :general
-    (+general-global-window
-      "H" 'evil-window-move-far-left
-      "J" 'evil-window-move-very-bottom
-      "K" 'evil-window-move-very-top
-      "L" 'evil-window-move-far-right)
-    (+general-global-menu! "quit" "q"
-      ":" 'evil-command-window-ex
-      "/" 'evil-command-window-search-forward
-      "?" 'evil-command-window-search-backward)
   :custom
     (evil-complete-all-buffers nil)
     (evil-search-module 'evil-search "use vim-like search instead of 'isearch")
@@ -273,9 +114,9 @@
     (evil-want-integration t)
   :config
     (defun +evil-kill-minibuffer ()
-    (interactive)
-    (when (windowp (active-minibuffer-window))
-      (evil-ex-search-exit)))
+      (interactive)
+      (when (windowp (active-minibuffer-window))
+	(evil-ex-search-exit)))
 
     (add-hook 'mouse-leave-buffer-hook #'+evil-kill-minibuffer)
     (define-key evil-motion-state-map [down-mouse-1] nil)
@@ -288,10 +129,18 @@
   (evil-collection-setup-minibuffer t "Add evil bindings to minibuffer")
   (evil-collection-company-use-tng t))
 
+(use-package evil-terminal-cursor-changer
+  :config
+    (unless (display-graphic-p)
+      (require 'evil-terminal-cursor-changer)
+      (evil-terminal-cursor-changer-activate)))
+
 (use-package evil-nerd-commenter
   :init (setq evilnc-hotkey-comment-operator "gc"))
 
-(use-package vterm :ensure t)
+(use-package vterm
+  :ensure t
+  :init (setq vterm-always-compile-module t))
 
 ;; Enable vertico
 (use-package vertico
@@ -345,12 +194,6 @@
 (use-package corfu-terminal
   :elpaca (:repo "https://codeberg.org/akib/emacs-corfu-terminal.git")
   :init (corfu-terminal-mode))
-
-(use-package exec-path-from-shell
-  ;; :elpaca (:repo "")
-  :config
-    (when (memq window-system '(mac ns x))
-    (exec-path-from-shell-initialize)))
 
 ;; Add extensions
 (use-package cape
@@ -440,8 +283,5 @@
   ;; Enable recursive minibuffers
   (setq enable-recursive-minibuffers t))
 
+;; Enable hooks for python
 (add-hook 'python-mode-hook 'eglot-ensure)
-
-(tool-bar-mode -1)
-(menu-bar-mode -1)
-(global-display-line-numbers-mode)
