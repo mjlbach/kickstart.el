@@ -6,46 +6,46 @@ WORK IN PROGRESS DO NOT USE
 
 A starting point for Emacs that is:
 
-* Small (<500 lines)
-* Two-file (it's emacs, ok)
-* Documented
-* Modular
+- Small (<500 lines)
+- Two-file (it's emacs, ok)
+- Documented
+- Modular
 
 This repo is meant to be used as a starting point for your Emacs configuration; remove the things you don't use and add what you miss.
 
-### Installation
+*** Installation
 
 Kickstart.el targets *only* emacs nightly (30 at the time of writing). If you are experiencing issues, please make sure you have the latest version.
 
-* Backup your previous configuration
-* (Recommended) Fork this repo (so that you have your own copy that you can modify).
-* Clone the kickstart repo into `$HOME/.config/emacs/`
-  * If you don't want to include it as a git repo, you can just clone it and then move the files to this location
-* Start Emacs (`emacs`) and allow `elpaca` to complete installation.
-* Restart Emacs
-* **You're ready to go!**
+- Backup your previous configuration
+- (Recommended) Fork this repo (so that you have your own copy that you can modify).
+- Clone the kickstart repo into `$HOME/.config/emacs/`
+  - If you don't want to include it as a git repo, you can just clone it and then move the files to this location
+- Start Emacs (`emacs`) and allow `elpaca` to complete installation.
+- Restart Emacs
+- **You're ready to go!**
 
 Additional system requirements:
 - Make sure to review the readmes of the plugins if you are experiencing errors. In particular:
-  - [ripgrep](https://github.com/BurntSushi/ripgrep#installation) is required for multiple vertico pickers.
+  - [[https://github.com/BurntSushi/ripgrep#installation][ripgrep]] is required for multiple vertico pickers.
 
-### Configuration And Extension
+*** Configuration And Extension
 
-* Inside of your fork, feel free to modify any file you like! It's your fork!
+- Inside of your fork, feel free to modify any file you like! It's your fork!
 
 You can also merge updates/changes from the repo back into your fork, to keep up-to-date with any changes for the default configuration
 
-### Contribution
+*** Contribution
 
 Pull-requests are welcome. The goal of this repo is not to create a Emacs configuration framework, but to offer a starting template that shows, by example, available features in Emacs. Some things that will not be included:
 
-* Custom language server configurations
-* Theming beyond a default colorscheme necessary for LSP highlight groups
+- Custom language server configurations
+- Theming beyond a default colorscheme necessary for LSP highlight groups
 
 Each PR, especially those which increase the line count, should have a description as to why the PR is necessary.
 
-### FAQ
+*** FAQ
 
-* What should I do if I already have a pre-existing emacs onfiguration?
-  * You should back it up, then delete all files associated with it.
-  * This includes your existing `early-init.el` and `init.el`
+- What should I do if I already have a pre-existing emacs onfiguration?
+  - You should back it up, then delete all files associated with it.
+  - This includes your existing `early-init.el` and `init.el`
