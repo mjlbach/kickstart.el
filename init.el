@@ -65,7 +65,12 @@
   (global-definer
     "!"   'shell-command
     ":"   'eval-expression
-    "."   'repeat)
+    "."   'repeat
+  )
+  (general-define-key
+     :keymaps 'override
+     :states '(normal hybrid motion visual operator emacs)
+     "-" 'dired-jump)
   (general-create-definer global-leader
     :keymaps 'override
     :states '(insert normal hybrid motion visual operator)
@@ -75,10 +80,10 @@
           :which-key
           (lambda (arg)
             (cons (cadr (split-string (car arg) " "))
-                  (replace-regexp-in-string "-mode$" "" (symbol-name major-mode))))))
-)
+                  (replace-regexp-in-string "-mode$" "" (symbol-name major-mode)))))))
 (elpaca-wait)
 
+;; Basic customization
 ;; Remove tool and menu bar
 (tool-bar-mode -1)
 (menu-bar-mode -1)
@@ -96,30 +101,77 @@
 (use-package exec-path-from-shell
   ;; :elpaca (:repo "")
   :config
-    (when (memq window-system '(mac ns x))
+  (when (memq window-system '(mac ns x))
     (exec-path-from-shell-initialize)))
 
+(use-package emacs
+  :elpaca nil
+  :init
+  ;; Add prompt indicator to `completing-read-multiple'.
+  ;; We display [CRM<separator>], e.g., [CRM,] if the separator is a comma.
+  (defun crm-indicator (args)
+    (cons (format "[CRM%s] %s"
+                  (replace-regexp-in-string
+                   "\\`\\[.*?]\\*\\|\\[.*?]\\*\\'" ""
+                   crm-separator)
+                  (car args))
+          (cdr args)))
+  (advice-add #'completing-read-multiple :filter-args #'crm-indicator)
+
+  ;; Do not allow the cursor in the minibuffer prompt
+  (setq minibuffer-prompt-properties
+        '(read-only t cursor-intangible t face minibuffer-prompt))
+  (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode)
+
+  ;; Emacs 28: Hide commands in M-x which do not work in the current mode.
+  ;; Vertico commands are hidden in normal buffers.
+  (setq read-extended-command-predicate
+        #'command-completion-default-include-p)
+
+  ;; Enable recursive minibuffers
+  (setq enable-recursive-minibuffers t))
+
+;; Persist history over Emacs restarts. Vertico sorts by history position.
+(use-package savehist
+  :elpaca nil
+  :init
+  (savehist-mode))
+
+;; Theming
+(use-package doom-themes
+  :ensure t
+  :config
+  ;; Global settings (defaults)
+  (load-theme 'doom-one t)
+  ;; Corrects (and improves) org-mode's native fontification.
+  (doom-themes-org-config))
+
+(use-package doom-modeline
+  :ensure t
+  :init (doom-modeline-mode 1))
+
+;; Evil support
 (use-package evil
   :demand t
   :preface (setq evil-want-keybinding nil)
   :custom
-    (evil-complete-all-buffers nil)
-    (evil-search-module 'evil-search "use vim-like search instead of 'isearch")
-    (evil-shift-width 2 "Same behavior for vim's '<' and '>' commands")
-    (evil-symbol-word-search t "search by symbol with * and #.")
-    (evil-undo-system 'undo-redo)
-    (evil-want-C-i-jump t)
-    (evil-want-C-u-delete t)
-    (evil-want-Y-yank-to-eol t)
-    (evil-want-integration t)
+  (evil-complete-all-buffers nil)
+  (evil-search-module 'evil-search "use vim-like search instead of 'isearch")
+  (evil-shift-width 2 "Same behavior for vim's '<' and '>' commands")
+  (evil-symbol-word-search t "search by symbol with * and #.")
+  (evil-undo-system 'undo-redo)
+  (evil-want-C-i-jump t)
+  (evil-want-C-u-delete t)
+  (evil-want-Y-yank-to-eol t)
+  (evil-want-integration t)
   :config
-    (defun +evil-kill-minibuffer ()
-      (interactive)
-      (when (windowp (active-minibuffer-window))
-	(evil-ex-search-exit)))
+  (defun +evil-kill-minibuffer ()
+    (interactive)
+    (when (windowp (active-minibuffer-window))
+      (evil-ex-search-exit)))
 
-    (add-hook 'mouse-leave-buffer-hook #'+evil-kill-minibuffer)
-    (define-key evil-motion-state-map [down-mouse-1] nil)
+  (add-hook 'mouse-leave-buffer-hook #'+evil-kill-minibuffer)
+  (define-key evil-motion-state-map [down-mouse-1] nil)
   (evil-mode))
 
 (use-package evil-collection
@@ -131,9 +183,9 @@
 
 (use-package evil-terminal-cursor-changer
   :config
-    (unless (display-graphic-p)
-      (require 'evil-terminal-cursor-changer)
-      (evil-terminal-cursor-changer-activate)))
+  (unless (display-graphic-p)
+    (require 'evil-terminal-cursor-changer)
+    (evil-terminal-cursor-changer-activate)))
 
 (use-package evil-nerd-commenter
   :init (setq evilnc-hotkey-comment-operator "gc"))
@@ -145,25 +197,97 @@
 ;; Enable vertico
 (use-package vertico
   :init
-  (vertico-mode))
+  (vertico-mode)
+;; Different scroll margin
+;; (setq vertico-scroll-margin 0)
 
-  ;; Different scroll margin
-  ;; (setq vertico-scroll-margin 0)
+;; Show more candidates
+;; (setq vertico-count 20)
 
-  ;; Show more candidates
-  ;; (setq vertico-count 20)
+;; Grow and shrink the Vertico minibuffer
+;; (setq vertico-resize t)
 
-  ;; Grow and shrink the Vertico minibuffer
-  ;; (setq vertico-resize t)
+;; Optionally enable cycling for `vertico-next' and `vertico-previous'.
+;; (setq vertico-cycle t)
+  )
 
-  ;; Optionally enable cycling for `vertico-next' and `vertico-previous'.
-  ;; (setq vertico-cycle t)
 
-;; ;; Persist history over Emacs restarts. Vertico sorts by history position.
-;; (use-package savehist
-;;   :init
-;;   (savehist-mode))
+;; Example configuration for Consult
+(use-package consult
+  ;; Replace bindings. Lazily loaded due by `use-package'.
+  :general 
+  (global-definer
+    "SPC" 'consult-buffer
+    "s"   'consult-ripgrep
+    "f"   'consult-find)
 
+  ;; Enable automatic preview at point in the *Completions* buffer. This is
+  ;; relevant when you use the default completion UI.
+  :hook (completion-list-mode . consult-preview-at-point-mode)
+
+  ;; The :init configuration is always executed (Not lazy)
+  :init
+  ;; Optionally configure the register formatting. This improves the register
+  ;; preview for `consult-register', `consult-register-load',
+  ;; `consult-register-store' and the Emacs built-ins.
+  (setq register-preview-delay 0.5
+        register-preview-function #'consult-register-format)
+
+  ;; Optionally tweak the register preview window.
+  ;; This adds thin lines, sorting and hides the mode line of the window.
+  (advice-add #'register-preview :override #'consult-register-window)
+
+  ;; Use Consult to select xref locations with preview
+  (setq xref-show-xrefs-function #'consult-xref
+        xref-show-definitions-function #'consult-xref)
+
+  ;; Configure other variables and modes in the :config section,
+  ;; after lazily loading the package.
+  :config
+
+  ;; Optionally configure preview. The default value
+  ;; is 'any, such that any key triggers the preview.
+  ;; (setq consult-preview-key 'any)
+  ;; (setq consult-preview-key "M-.")
+  ;; (setq consult-preview-key '("S-<down>" "S-<up>"))
+  ;; For some commands and buffer sources it is useful to configure the
+  ;; :preview-key on a per-command basis using the `consult-customize' macro.
+  (consult-customize
+   consult-theme :preview-key '(:debounce 0.2 any)
+   consult-ripgrep consult-git-grep consult-grep
+   consult-bookmark consult-recent-file consult-xref
+   consult--source-bookmark consult--source-file-register
+   consult--source-recent-file consult--source-project-recent-file
+   ;; :preview-key "M-."
+   :preview-key '(:debounce 0.4 any))
+
+  ;; Optionally configure the narrowing key.
+  ;; Both < and C-+ work reasonably well.
+  (setq consult-narrow-key "<") ;; "C-+"
+
+  ;; Optionally make narrowing help available in the minibuffer.
+  ;; You may want to use `embark-prefix-help-command' or which-key instead.
+  ;; (define-key consult-narrow-map (vconcat consult-narrow-key "?") #'consult-narrow-help)
+
+  )
+
+;; Optionally use the `orderless' completion style.
+(use-package orderless
+  :init
+  ;; Configure a custom style dispatcher (see the Consult wiki)
+  ;; (setq orderless-style-dispatchers '(+orderless-consult-dispatch orderless-affix-dispatch)
+  ;;       orderless-component-separator #'orderless-escapable-split-on-space)
+  (setq completion-styles '(orderless basic)
+        completion-category-defaults nil
+        completion-category-overrides '((file (styles partial-completion)))))
+
+;; LSP support
+;; Enable hooks for eglot
+(add-hook 'prog-mode-hook #'eglot-ensure)
+
+;;Formatting Support
+(use-package apheleia
+  :init (apheleia-global-mode +1))
 
 ;; Enable Corfu completion UI
 ;; See the Corfu README for more configuration tips.
@@ -229,59 +353,4 @@
   ;;(add-to-list 'completion-at-point-functions #'cape-dict)
   ;;(add-to-list 'completion-at-point-functions #'cape-symbol)
   ;;(add-to-list 'completion-at-point-functions #'cape-line)
-)
-
-(use-package apheleia
-  :init (apheleia-global-mode +1))
-
-(use-package doom-themes
-  :ensure t
-  :config
-  ;; Global settings (defaults)
-  (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
-        doom-themes-enable-italic t) ; if nil, italics is universally disabled
-  (load-theme 'doom-one t)
-
-  ;; Enable flashing mode-line on errors
-  (doom-themes-visual-bell-config)
-  ;; Enable custom neotree theme (all-the-icons must be installed!)
-  (doom-themes-neotree-config)
-  ;; or for treemacs users
-  (setq doom-themes-treemacs-theme "doom-atom") ; use "doom-colors" for less minimal icon theme
-  (doom-themes-treemacs-config)
-  ;; Corrects (and improves) org-mode's native fontification.
-  (doom-themes-org-config))
-
-(use-package doom-modeline
-  :ensure t
-  :init (doom-modeline-mode 1))
-
-(use-package emacs
-  :elpaca nil
-  :init
-  ;; Add prompt indicator to `completing-read-multiple'.
-  ;; We display [CRM<separator>], e.g., [CRM,] if the separator is a comma.
-  (defun crm-indicator (args)
-    (cons (format "[CRM%s] %s"
-                  (replace-regexp-in-string
-                   "\\`\\[.*?]\\*\\|\\[.*?]\\*\\'" ""
-                   crm-separator)
-                  (car args))
-          (cdr args)))
-  (advice-add #'completing-read-multiple :filter-args #'crm-indicator)
-
-  ;; Do not allow the cursor in the minibuffer prompt
-  (setq minibuffer-prompt-properties
-        '(read-only t cursor-intangible t face minibuffer-prompt))
-  (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode)
-
-  ;; Emacs 28: Hide commands in M-x which do not work in the current mode.
-  ;; Vertico commands are hidden in normal buffers.
-  (setq read-extended-command-predicate
-        #'command-completion-default-include-p)
-
-  ;; Enable recursive minibuffers
-  (setq enable-recursive-minibuffers t))
-
-;; Enable hooks for python
-(add-hook 'python-mode-hook 'eglot-ensure)
+  )
