@@ -333,12 +333,49 @@
 
 ;; LSP support
 ;; Enable hooks for eglot
+(use-package eglot
+  :config
+  (add-to-list 'eglot-server-programs '(rust-mode "rustup" "run" "nightly" "rust-analyzer"))) 
+
+(use-package eldoc-box
+  :general
+  (defun eldoc-box-scroll-up ()
+    "Scroll up in `eldoc-box--frame'"
+    (interactive)
+    (with-current-buffer eldoc-box--buffer
+      (with-selected-frame eldoc-box--frame
+        (scroll-down 3))))
+  (defun eldoc-box-scroll-down ()
+    "Scroll down in `eldoc-box--frame'"
+    (interactive)
+    (with-current-buffer eldoc-box--buffer
+      (with-selected-frame eldoc-box--frame
+        (scroll-up 3))))
+  (:keymaps 'eglot-mode-map
+   :states '(insert normal hybrid motion visual operator emacs)
+   "C-k" 'eldoc-box-scroll-up
+   "C-j" 'eldoc-box-scroll-down
+   "K" 'eldoc-box-eglot-help-at-point))
+  ;; :init
+  ;; (add-hook 'eglot-managed-mode-hook #'eldoc-box-hover-at-point-mode t))
+
+;; Support for rust
+(use-package rust-mode
+  :init (add-hook 'rust-mode-hook 'eglot-ensure))
+
+;; Support for python
 (dolist (mode '(python-mode-hook c-mode-hook))
  (add-hook mode #'eglot-ensure))
 
 ;;Formatting Support
 (use-package apheleia
   :init (apheleia-global-mode +1))
+
+;; Treesitter support
+(use-package tree-sitter
+  :init (global-tree-sitter-mode)
+  (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode))
+(use-package tree-sitter-langs)
 
 ;; Enable Corfu completion UI
 ;; See the Corfu README for more configuration tips.
