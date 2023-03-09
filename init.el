@@ -221,8 +221,27 @@
   :init (setq evilnc-hotkey-comment-operator "gc"))
 
 (use-package vterm
-  :ensure t
-  :init (setq vterm-always-compile-module t))
+  :elpaca (vterm :post-build
+                 (progn
+                   (setq vterm-always-compile-module t)
+                   (require 'vterm)
+                   ;; (require 'exec-path-from-shell)
+                   ;; (exec-path-from-shell-initialize))
+                   ;;print compilation info for elpaca
+                   (with-current-buffer (get-buffer-create vterm-install-buffer-name)
+                     (goto-char (point-min))
+                     (while (not (eobp))
+                       (message "%S"
+                                (buffer-substring (line-beginning-position)
+                                                  (line-end-position)))
+                       (forward-line)))
+                   (when-let ((so (expand-file-name "./vterm-module.so"))
+                              ((file-exists-p so)))
+                     (make-symbolic-link
+                      so (expand-file-name (file-name-nondirectory so)
+                                           "../../builds/vterm")
+                      'ok-if-already-exists))))
+  :commands (vterm vterm-other-window))
 
 ;; Enable vertico
 (use-package vertico
