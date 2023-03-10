@@ -84,21 +84,6 @@
    )
 (elpaca-wait)
 
-;; Basic customization
-;; Remove tool and menu bar
-(tool-bar-mode -1)
-(menu-bar-mode -1)
-
-;; Preserve cursor position on screen
-(setq scroll-preserve-screen-position 'always)
-
-;; Display line numbers
-(global-display-line-numbers-mode)
-
-;; Enable mouse mode in terminal
-(unless (display-graphic-p)
-  (xterm-mouse-mode 1))
-
 (use-package exec-path-from-shell
   ;; :elpaca (:repo "")
   :config
@@ -122,6 +107,7 @@
   ;; Do not allow the cursor in the minibuffer prompt
   (setq minibuffer-prompt-properties
         '(read-only t cursor-intangible t face minibuffer-prompt))
+
   (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode)
 
   ;; Emacs 28: Hide commands in M-x which do not work in the current mode.
@@ -134,9 +120,27 @@
   (setq recentf-max-menu-items 100)
   (setq recentf-max-saved-items 100)
 
+  ;; Disable automatic documentation/signature help popup in minibuffer
+  (global-eldoc-mode -1)
 
   ;; Enable recursive minibuffers
-  (setq enable-recursive-minibuffers t))
+  (setq enable-recursive-minibuffers t)
+
+  ;; Basic customization
+  ;; Remove tool and menu bar
+  (tool-bar-mode -1)
+  (menu-bar-mode -1)
+
+  ;; Preserve cursor position on screen
+  (setq scroll-preserve-screen-position 'always)
+
+  ;; Display line numbers
+  (global-display-line-numbers-mode)
+
+  ;; Enable mouse mode in terminal
+  (unless (display-graphic-p)
+    (xterm-mouse-mode 1)))
+
 
 (use-package flymake
   :elpaca nil
@@ -335,7 +339,9 @@
 ;; Enable hooks for eglot
 (use-package eglot
   :config
-  (add-to-list 'eglot-server-programs '(rust-mode "rustup" "run" "nightly" "rust-analyzer"))) 
+  (add-to-list 'eglot-server-programs '(rust-mode "rustup" "run" "nightly" "rust-analyzer"))
+  (add-to-list 'eglot-stay-out-of 'eldoc)
+  ) 
 
 (use-package eldoc-box
   :general
@@ -358,7 +364,7 @@
    "K" 'eldoc-box-eglot-help-at-point))
   ;; :init
   ;; (add-hook 'eglot-managed-mode-hook #'eldoc-box-hover-at-point-mode t))
-
+;;
 ;; Support for rust
 (use-package rust-mode
   :init (add-hook 'rust-mode-hook 'eglot-ensure))
