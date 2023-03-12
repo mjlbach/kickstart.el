@@ -33,11 +33,6 @@
 (add-hook 'after-init-hook #'elpaca-process-queues)
 (elpaca `(,@elpaca-order))
 
-;; Use evil in elpaca
-(with-eval-after-load 'evil
-  (with-eval-after-load 'elpaca-ui (evil-make-intercept-map elpaca-ui-mode-map))
-  (with-eval-after-load 'elpaca-info (evil-make-intercept-map elpaca-info-mode-map)))
-
 ;; Install use-package support
 (elpaca elpaca-use-package
   ;; Enable :elpaca use-package keyword.
@@ -84,12 +79,6 @@
    )
 (elpaca-wait)
 
-(use-package exec-path-from-shell
-  ;; :elpaca (:repo "")
-  :config
-  (when (memq window-system '(mac ns x))
-    (exec-path-from-shell-initialize)))
-
 (use-package emacs
   :elpaca nil
   :init
@@ -121,7 +110,10 @@
   (setq recentf-max-saved-items 100)
 
   ;; Disable automatic documentation/signature help popup in minibuffer
-  (global-eldoc-mode -1)
+  ;; TODO: eldoc-box does not work in terminal, and we can't set this
+  ;; per client
+  (if (display-graphic-p)
+    (global-eldoc-mode -1))
 
   ;; Enable recursive minibuffers
   (setq enable-recursive-minibuffers t)
@@ -137,10 +129,21 @@
   ;; Display line numbers
   (global-display-line-numbers-mode)
 
+  ;; Custom error message
+  (defun display-startup-echo-area-message () (message ()))
+
+  ;; Suppress startup message
+  ;; TODO: does not work
+  (setq inhibit-startup-echo-area-message user-login-name)
+
   ;; Enable mouse mode in terminal
   (unless (display-graphic-p)
     (xterm-mouse-mode 1)))
 
+(use-package exec-path-from-shell
+  :config
+  (when (memq window-system '(mac ns x))
+    (exec-path-from-shell-initialize)))
 
 (use-package flymake
   :elpaca nil
@@ -165,7 +168,6 @@
 
 ;; Theming
 (use-package doom-themes
-  :ensure t
   :config
   ;; Global settings (defaults)
   (load-theme 'doom-one t)
@@ -173,7 +175,6 @@
   (doom-themes-org-config))
 
 (use-package doom-modeline
-  :ensure t
   :init (doom-modeline-mode 1))
 
 ;; Evil support
@@ -212,6 +213,7 @@
   :after (evil)
   :config (evil-collection-init)
   :custom
+  (evil-collection-elpaca-want-g-filters nil)
   (evil-collection-setup-minibuffer t "Add evil bindings to minibuffer")
   (evil-collection-company-use-tng t))
 
@@ -338,10 +340,13 @@
 ;; LSP support
 ;; Enable hooks for eglot
 (use-package eglot
+  :elpaca nil
+  :hook ((prog-mode . (lambda ()
+                         (unless (derived-mode-p 'emacs-lisp-mode 'lisp-mode 'makefile-mode 'snippet-mode)
+                           (eglot-ensure)))))
   :config
   (add-to-list 'eglot-server-programs '(rust-mode "rustup" "run" "nightly" "rust-analyzer"))
-  (add-to-list 'eglot-stay-out-of 'eldoc)
-  ) 
+  (add-to-list 'eglot-stay-out-of 'eldoc)) 
 
 (use-package eldoc-box
   :general
@@ -366,22 +371,18 @@
   ;; (add-hook 'eglot-managed-mode-hook #'eldoc-box-hover-at-point-mode t))
 ;;
 ;; Support for rust
-(use-package rust-mode
-  :init (add-hook 'rust-mode-hook 'eglot-ensure))
-
-;; Support for python
-(dolist (mode '(python-mode-hook c-mode-hook))
- (add-hook mode #'eglot-ensure))
+;;(use-package rust-mode
+;;  :init (add-hook 'rust-mode-hook 'eglot-ensure))
 
 ;;Formatting Support
 (use-package apheleia
   :init (apheleia-global-mode +1))
 
 ;; Treesitter support
-(use-package tree-sitter
-  :init (global-tree-sitter-mode)
-  (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode))
-(use-package tree-sitter-langs)
+(use-package treesit-auto
+  :init 
+  (setq treesit-auto-install 'prompt)
+  (global-treesit-auto-mode))
 
 ;; Enable Corfu completion UI
 ;; See the Corfu README for more configuration tips.
@@ -423,5 +424,4 @@
   ;; Add `completion-at-point-functions', used by `completion-at-point'.
   (add-to-list 'completion-at-point-functions #'cape-dabbrev)
   (add-to-list 'completion-at-point-functions #'cape-file)
-  (add-to-list 'completion-at-point-functions #'cape-symbol)
-  )
+  (add-to-list 'completion-at-point-functions #'cape-symbol))
