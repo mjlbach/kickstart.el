@@ -171,6 +171,26 @@
 (use-package doom-modeline
   :init (doom-modeline-mode 1))
 
+;; Add indent guides
+(use-package highlight-indent-guides
+  :hook ((prog-mode text-mode conf-mode) . highlight-indent-guides-mode)
+  :config
+  :init (setq highlight-indent-guides-method 'character)
+  (setq highlight-indent-guides-auto-character-face-perc 100))
+  ;; (set-face-foreground 'highlight-indent-guides-character-face "white"))
+
+;; Use vim-like tree for undo
+(use-package undo-fu)
+
+;; Save undo/redo across sessions
+(use-package undo-fu-session
+  :init
+  (undo-fu-session-global-mode))
+
+(use-package move-text
+  :elpaca (:repo "https://github.com/mjlbach/evil-move-text.git")
+  :config (move-text-default-bindings))
+
 ;; Evil (vim keybindings) support
 (use-package evil
   :demand t
@@ -197,12 +217,6 @@
   (define-key evil-motion-state-map [down-mouse-1] nil)
   (evil-mode))
 
-(use-package undo-fu)
-(use-package undo-fu-session
-  :init
-  (undo-fu-session-global-mode)
-)
-
 (use-package evil-collection
   :after (evil)
   :config (evil-collection-init)
@@ -216,6 +230,7 @@
   (unless (display-graphic-p)
     (require 'evil-terminal-cursor-changer)
     (evil-terminal-cursor-changer-activate)))
+
 
 (use-package evil-nerd-commenter
   :init (setq evilnc-hotkey-comment-operator "gc"))
@@ -362,7 +377,7 @@
 ;;    ;; bind `function.outer`(entire function block) to `f` for use in things like `vaf`, `yaf`
 ;;  (define-key evil-outer-text-objects-map "f" (evil-textobj-tree-sitter-get-textobj "function.outer"))
 ;;  ;; bind `function.inner`(function block without name and args) to `f` for use in things like `vif`, `yif`
-;;  (define-key evil-inner-text-objects-map "f" (evil-textobj-tree-sitter-get-textobj "function.inner"))
+;;  (define-key evil-inner-text-objects-map "f" (evil-textobj-tree-sitter-get-textobj "function.inner")) 
 ;;
 ;;  ;; You can also bind multiple items and we will match the first one we can find
 ;;  (define-key evil-outer-text-objects-map "a" (evil-textobj-tree-sitter-get-textobj ("conditional.outer" "loop.outer"))))
