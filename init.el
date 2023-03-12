@@ -136,6 +136,9 @@
   ;; TODO: does not work
   (setq inhibit-startup-echo-area-message user-login-name)
 
+  ;; Associate rust files with rust-ts-mode
+  (add-to-list 'auto-mode-alist '("\\.rs\\'" . rust-ts-mode))
+
   ;; Enable mouse mode in terminal
   (unless (display-graphic-p)
     (xterm-mouse-mode 1)))
@@ -283,13 +286,13 @@
 
   ;; The :init configuration is always executed (Not lazy)
   :init
-  ;; Optionally configure the register formatting. This improves the register
+  ;; Configure the register formatting. This improves the register
   ;; preview for `consult-register', `consult-register-load',
   ;; `consult-register-store' and the Emacs built-ins.
   (setq register-preview-delay 0.5
         register-preview-function #'consult-register-format)
 
-  ;; Optionally tweak the register preview window.
+  ;; Tweak the register preview window.
   ;; This adds thin lines, sorting and hides the mode line of the window.
   (advice-add #'register-preview :override #'consult-register-window)
 
@@ -297,42 +300,13 @@
   (setq xref-show-xrefs-function #'consult-xref
         xref-show-definitions-function #'consult-xref)
 
-  ;; Configure other variables and modes in the :config section,
-  ;; after lazily loading the package.
   :config
-
-  ;; Optionally configure preview. The default value
-  ;; is 'any, such that any key triggers the preview.
-  ;; (setq consult-preview-key 'any)
-  ;; (setq consult-preview-key "M-.")
-  ;; (setq consult-preview-key '("S-<down>" "S-<up>"))
-  ;; For some commands and buffer sources it is useful to configure the
-  ;; :preview-key on a per-command basis using the `consult-customize' macro.
-  (consult-customize
-   consult-theme :preview-key '(:debounce 0.2 any)
-   consult-ripgrep consult-git-grep consult-grep
-   consult-bookmark consult-recent-file consult-xref
-   consult--source-bookmark consult--source-file-register
-   consult--source-recent-file consult--source-project-recent-file
-   ;; :preview-key "M-."
-   :preview-key '(:debounce 0.4 any))
-
-  ;; Optionally configure the narrowing key.
-  ;; Both < and C-+ work reasonably well.
-  (setq consult-narrow-key "<") ;; "C-+"
-
-  ;; Optionally make narrowing help available in the minibuffer.
-  ;; You may want to use `embark-prefix-help-command' or which-key instead.
-  ;; (define-key consult-narrow-map (vconcat consult-narrow-key "?") #'consult-narrow-help)
-
-  )
+  ;; Cnfigure the narrowing key.
+  (setq consult-narrow-key "<"))
 
 ;; Optionally use the `orderless' completion style.
 (use-package orderless
   :init
-  ;; Configure a custom style dispatcher (see the Consult wiki)
-  ;; (setq orderless-style-dispatchers '(+orderless-consult-dispatch orderless-affix-dispatch)
-  ;;       orderless-component-separator #'orderless-escapable-split-on-space)
   (setq completion-styles '(orderless basic)
         completion-category-defaults nil
         completion-category-overrides '((file (styles partial-completion)))))
@@ -345,7 +319,8 @@
                          (unless (derived-mode-p 'emacs-lisp-mode 'lisp-mode 'makefile-mode 'snippet-mode)
                            (eglot-ensure)))))
   :config
-  (add-to-list 'eglot-server-programs '(rust-mode "rustup" "run" "nightly" "rust-analyzer"))
+  (add-hook 'rust-ts-mode-hook 'eglot-ensure)
+  (add-to-list 'eglot-server-programs '(rust-ts-mode "rustup" "run" "nightly" "rust-analyzer"))
   (add-to-list 'eglot-stay-out-of 'eldoc)) 
 
 (use-package eldoc-box
@@ -367,15 +342,12 @@
    "C-k" 'eldoc-box-scroll-up
    "C-j" 'eldoc-box-scroll-down
    "K" 'eldoc-box-eglot-help-at-point))
-  ;; :init
-  ;; (add-hook 'eglot-managed-mode-hook #'eldoc-box-hover-at-point-mode t))
-;;
-;; Support for rust
-;;(use-package rust-mode
-;;  :init (add-hook 'rust-mode-hook 'eglot-ensure))
 
 ;;Formatting Support
 (use-package apheleia
+  :general
+  (global-definer
+    "f"   'apheleia-format-buffer)
   :init (apheleia-global-mode +1))
 
 ;; Treesitter support
