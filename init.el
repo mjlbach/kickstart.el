@@ -217,6 +217,7 @@
   (define-key evil-motion-state-map [down-mouse-1] nil)
   (evil-mode))
 
+;; Additional evil bindings for other packages (e.g. vterm)
 (use-package evil-collection
   :after (evil)
   :config (evil-collection-init)
@@ -225,15 +226,15 @@
   (evil-collection-setup-minibuffer t "Add evil bindings to minibuffer")
   (evil-collection-company-use-tng t))
 
+;; Make cursor theme match between gui emacs
 (use-package evil-terminal-cursor-changer
   :config
   (unless (display-graphic-p)
     (require 'evil-terminal-cursor-changer)
     (evil-terminal-cursor-changer-activate)))
 
-
 (use-package evil-nerd-commenter
-  :init (setq evilnc-hotkey-comment-operator "gc"))
+  :general ("gc" #'evilnc-comment-or-uncomment-lines))
 
 (use-package vterm
   :elpaca (vterm :post-build
