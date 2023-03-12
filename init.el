@@ -350,6 +350,14 @@
     "f"   'apheleia-format-buffer)
   :init (apheleia-global-mode +1))
 
+;; Allow opening current link to git repo
+(use-package git-link
+  :config
+  (setq git-link-open-in-browser t))
+
+;; Allow viewing older git revisions
+(use-package git-timemachine)
+
 ;; Treesitter support
 (use-package treesit-auto
   :init 
