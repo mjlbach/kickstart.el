@@ -100,8 +100,8 @@
   (setq recentf-max-saved-items 100)
 
   ;; Disable automatic documentation/signature help popup in minibuffer
-  ;; TODO: eldoc-box does not work in terminal, and we can't set this
-  ;; per client
+  ;; TODO: eldoc-box does not work in terminal, and we can't set this per client
+  ;; If you always want popups in the minibuffer, remove these lines
   (if (display-graphic-p)
     (global-eldoc-mode -1))
 
@@ -118,6 +118,14 @@
 
   ;; Display line numbers
   (global-display-line-numbers-mode)
+
+  ;; Disable line numbers for certain modes
+  (dolist (mode '(org-mode-hook
+                  term-mode-hook
+                  vterm-mode-hook
+                  shell-mode-hook
+                  eshell-mode-hook))
+  (add-hook mode (lambda() (display-line-numbers-mode 0))))
 
   ;; Custom error message
   (defun display-startup-echo-area-message () (message ()))
@@ -200,9 +208,9 @@
   (evil-search-module 'evil-search "use vim-like search instead of 'isearch")
   (evil-shift-width 2 "Same behavior for vim's '<' and '>' commands")
   (evil-symbol-word-search t "search by symbol with * and #.")
-  (evil-undo-system 'undo-redo)
-  (evil-want-C-i-jump t)
+  (evil-undo-system 'undo-fu)
   (evil-want-C-u-delete t)
+  (evil-want-C-u-scroll t)
   (evil-want-Y-yank-to-eol t)
   (evil-want-integration t)
   :init
@@ -223,19 +231,19 @@
   :config (evil-collection-init)
   :custom
   (evil-collection-elpaca-want-g-filters nil)
-  (evil-collection-setup-minibuffer t "Add evil bindings to minibuffer")
-  (evil-collection-company-use-tng t))
+  (evil-collection-setup-minibuffer t "Add evil bindings to minibuffer"))
+
+;; Use gc to comment regions and blocks
+(use-package evil-nerd-commenter
+  :general ("gc" #'evilnc-comment-or-uncomment-lines))
 
 ;; Make cursor theme match between gui emacs
 (use-package evil-terminal-cursor-changer
   :config
   (unless (display-graphic-p)
-    (require 'evil-terminal-cursor-changer)
     (evil-terminal-cursor-changer-activate)))
 
-(use-package evil-nerd-commenter
-  :general ("gc" #'evilnc-comment-or-uncomment-lines))
-
+;; Fast, compiled terminal
 (use-package vterm
   :elpaca (vterm :post-build
                  (progn
@@ -319,11 +327,15 @@
   ;; Rust is not enabled by default for eglot
   (add-hook 'rust-ts-mode-hook 'eglot-ensure)
 
-  ;; To install rustup component add rust-src && rustup component add rust-analyzer
+  ;; To install: rustup component add rust-src && rustup component add rust-analyzer
   (add-to-list 'eglot-server-programs '(rust-ts-mode "rustup" "run" "nightly" "rust-analyzer"))
 
   ;; Disable eldoc support by default
-  (add-to-list 'eglot-stay-out-of 'eldoc)) 
+  ;; TODO: due to limitations with emacs TUI/GUI compatibility and
+  ;; server/client, this only applies to the emacs you start your config with
+  ;; If you always want popups in the minibuffer, remove these lines
+  (if (display-graphic-p)
+    (add-to-list 'eglot-stay-out-of 'eldoc))) 
 
 ;; Add floating window with information summonable by K
 (use-package eldoc-box
