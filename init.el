@@ -42,7 +42,7 @@
 
 (elpaca-wait)
 
-;; Set up keybindings
+;; Set up general - a keybinding manager 
 (use-package general
   :demand t
   :config
@@ -65,20 +65,10 @@
   (general-define-key
      :keymaps 'override
      :states '(normal hybrid motion visual operator emacs)
-     "-" 'dired-jump)
-  (general-create-definer global-leader
-    :keymaps 'override
-    :states '(insert normal hybrid motion visual operator)
-    :prefix "SPC m"
-    :non-normal-prefix "S-SPC m"
-    "" '( :ignore t
-          :which-key
-          (lambda (arg)
-            (cons (cadr (split-string (car arg) " "))
-                  (replace-regexp-in-string "-mode$" "" (symbol-name major-mode))))))
-   )
+     "-" 'dired-jump))
 (elpaca-wait)
 
+;; Add some default configuration to emacs
 (use-package emacs
   :elpaca nil
   :init
@@ -104,7 +94,7 @@
   (setq read-extended-command-predicate
         #'command-completion-default-include-p)
 
-  ;; Store recent files
+  ;; Store recent files to allow c-o c-f to work
   (recentf-mode 1)
   (setq recentf-max-menu-items 100)
   (setq recentf-max-saved-items 100)
@@ -163,13 +153,13 @@
     "ds"   'consult-flymake)
 )
 
-;; Persist history over Emacs restarts. Vertico sorts by history position.
+;; Persist history over Emacs restarts, include recentf.
 (use-package savehist
   :elpaca nil
   :init
   (savehist-mode))
 
-;; Theming
+;; Use doom one theme
 (use-package doom-themes
   :config
   ;; Global settings (defaults)
@@ -177,10 +167,11 @@
   ;; Corrects (and improves) org-mode's native fontification.
   (doom-themes-org-config))
 
+;; Add default statusline
 (use-package doom-modeline
   :init (doom-modeline-mode 1))
 
-;; Evil support
+;; Evil (vim keybindings) support
 (use-package evil
   :demand t
   :preface (setq evil-want-keybinding nil)
@@ -252,25 +243,12 @@
                       'ok-if-already-exists))))
   :commands (vterm vterm-other-window))
 
-;; Enable vertico
+;; Enable vertico - fuzzy minibuffer completion
 (use-package vertico
   :init
-  (vertico-mode)
-;; Different scroll margin
-;; (setq vertico-scroll-margin 0)
+  (vertico-mode))
 
-;; Show more candidates
-;; (setq vertico-count 20)
-
-;; Grow and shrink the Vertico minibuffer
-;; (setq vertico-resize t)
-
-;; Optionally enable cycling for `vertico-next' and `vertico-previous'.
-;; (setq vertico-cycle t)
-  )
-
-
-;; Example configuration for Consult
+;; Consult - additional finders for vertico
 (use-package consult
   ;; Replace bindings. Lazily loaded due by `use-package'.
   :general 
@@ -305,24 +283,33 @@
   (setq consult-narrow-key "<"))
 
 ;; Optionally use the `orderless' completion style.
+;; More flexible matching, divides the pattern into space-separated components,
+;; and matches candidates that match all of the components in any order
 (use-package orderless
   :init
   (setq completion-styles '(orderless basic)
         completion-category-defaults nil
         completion-category-overrides '((file (styles partial-completion)))))
 
-;; LSP support
-;; Enable hooks for eglot
+;; Enable lsp support
 (use-package eglot
   :elpaca nil
   :hook ((prog-mode . (lambda ()
                          (unless (derived-mode-p 'emacs-lisp-mode 'lisp-mode 'makefile-mode 'snippet-mode)
                            (eglot-ensure)))))
   :config
+
+  ;; Example - add rust support
+  ;; Rust is not enabled by default for eglot
   (add-hook 'rust-ts-mode-hook 'eglot-ensure)
+
+  ;; To install rustup component add rust-src && rustup component add rust-analyzer
   (add-to-list 'eglot-server-programs '(rust-ts-mode "rustup" "run" "nightly" "rust-analyzer"))
+
+  ;; Disable eldoc support by default
   (add-to-list 'eglot-stay-out-of 'eldoc)) 
 
+;; Add floating window with information summonable by K
 (use-package eldoc-box
   :general
   (defun eldoc-box-scroll-up ()
@@ -347,7 +334,7 @@
 (use-package apheleia
   :general
   (global-definer
-    "f"   'apheleia-format-buffer)
+    "bf"   'apheleia-format-buffer)
   :init (apheleia-global-mode +1))
 
 ;; Allow opening current link to git repo in browser
@@ -358,46 +345,43 @@
 ;; Allow viewing older git revisions
 (use-package git-timemachine)
 
+;; Show git change information in the sign column
 (use-package git-gutter
   :config (global-git-gutter-mode +1))
 
-;; Treesitter support
+;; Treesitter installation/language mapping support
 (use-package treesit-auto
   :init 
   (setq treesit-auto-install 'prompt)
   (global-treesit-auto-mode))
 
-;; Enable Corfu completion UI
-;; See the Corfu README for more configuration tips.
+;; Tree sitter text objects (TODO: Does not support built-in treesitter yet)
+;; See https://github.com/meain/evil-textobj-tree-sitter/issues/76
+;;(use-package evil-textobj-tree-sitter
+;;  :config
+;;    ;; bind `function.outer`(entire function block) to `f` for use in things like `vaf`, `yaf`
+;;  (define-key evil-outer-text-objects-map "f" (evil-textobj-tree-sitter-get-textobj "function.outer"))
+;;  ;; bind `function.inner`(function block without name and args) to `f` for use in things like `vif`, `yif`
+;;  (define-key evil-inner-text-objects-map "f" (evil-textobj-tree-sitter-get-textobj "function.inner"))
+;;
+;;  ;; You can also bind multiple items and we will match the first one we can find
+;;  (define-key evil-outer-text-objects-map "a" (evil-textobj-tree-sitter-get-textobj ("conditional.outer" "loop.outer"))))
+
+;; Enable Corfu completion UI with autocompletion enabled
 (use-package corfu
   ;; Optional customizations
   :custom
   (corfu-cycle t)                ;; Enable cycling for `corfu-next/previous'
   (corfu-auto t)                 ;; Enable auto completion
-  ;; (corfu-separator ?\s)          ;; Orderless field separator
-  ;; (corfu-quit-at-boundary nil)   ;; Never quit at completion boundary
-  ;; (corfu-quit-no-match nil)      ;; Never quit, even if there is no match
-  ;; (corfu-preview-current nil)    ;; Disable current candidate preview
-  ;; (corfu-preselect 'prompt)      ;; Preselect the prompt
-  ;; (corfu-on-exact-match nil)     ;; Configure handling of exact matches
-  ;; (corfu-scroll-margin 5)        ;; Use scroll margin
-
-  ;; Enable Corfu only for certain modes.
-  ;; :hook ((prog-mode . corfu-mode)
-  ;;        (shell-mode . corfu-mode)
-  ;;        (eshell-mode . corfu-mode))
-
-  ;; Recommended: Enable Corfu globally.
-  ;; This is recommended since Dabbrev can be used globally (M-/).
-  ;; See also `corfu-excluded-modes'.
   :init
   (global-corfu-mode))
 
+;; Enable completion UI in terminal
 (use-package corfu-terminal
   :elpaca (:repo "https://codeberg.org/akib/emacs-corfu-terminal.git")
   :init (corfu-terminal-mode))
 
-;; Add extensions
+;; Add to CAPE for additional completion functionality
 (use-package cape
   ;; Bind dedicated completion commands
   ;; Alternative prefix keys: C-c p, M-p, M-+, ...
