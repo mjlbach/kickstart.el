@@ -358,8 +358,8 @@
 ;; Allow viewing older git revisions
 (use-package git-timemachine)
 
-;(use-package git-gutter
-;  :config (global-git-gutter-mode +1))
+(use-package git-gutter
+  :config (global-git-gutter-mode +1))
 
 ;; Treesitter support
 (use-package treesit-auto
