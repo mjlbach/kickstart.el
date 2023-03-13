@@ -33,6 +33,16 @@
 (add-hook 'after-init-hook #'elpaca-process-queues)
 (elpaca `(,@elpaca-order))
 
+;;Utilities to debug startup time
+(setq use-package-compute-statistics t)
+(defun efs/display-startup-time ()
+  (message "Emacs loaded in %s with %d garbage collections."
+           (format "%.2f seconds"
+                   (float-time
+                   (time-subtract after-init-time before-init-time)))
+           gcs-done))
+(add-hook 'emacs-startup-hook #'efs/display-startup-time)
+
 ;; Install use-package support
 (elpaca elpaca-use-package
   ;; Enable :elpaca use-package keyword.
@@ -179,6 +189,11 @@
 (use-package doom-modeline
   :init (doom-modeline-mode 1))
 
+;; Nice startup start screen
+;; (use-package dashboard
+;;   :config
+;;   (dashboard-setup-startup-hook))
+
 ;; Add indent guides
 (use-package highlight-indent-guides
   :hook ((prog-mode text-mode conf-mode) . highlight-indent-guides-mode)
@@ -195,13 +210,15 @@
   :init
   (undo-fu-session-global-mode))
 
+;; Allow moving block regions of text with up/down arrows
 (use-package move-text
   :elpaca (:repo "https://github.com/mjlbach/evil-move-text.git")
-  :config (move-text-default-bindings))
+  :general
+  (:states 'normal "M-<up>" #'move-text-up)
+  (:states 'normal "M-<down>" #'move-text-down))
 
 ;; Evil (vim keybindings) support
 (use-package evil
-  :demand t
   :preface (setq evil-want-keybinding nil)
   :custom
   (evil-complete-all-buffers nil)
@@ -216,18 +233,11 @@
   :init
   (setq evil-undo-system 'undo-fu)
   :config
-  (defun +evil-kill-minibuffer ()
-    (interactive)
-    (when (windowp (active-minibuffer-window))
-      (evil-ex-search-exit)))
-
-  (add-hook 'mouse-leave-buffer-hook #'+evil-kill-minibuffer)
-  (define-key evil-motion-state-map [down-mouse-1] nil)
   (evil-mode))
 
 ;; Additional evil bindings for other packages (e.g. vterm)
 (use-package evil-collection
-  :after (evil)
+  :after evil
   :config (evil-collection-init)
   :custom
   (evil-collection-elpaca-want-g-filters nil)
@@ -235,7 +245,7 @@
 
 ;; Use gc to comment regions and blocks
 (use-package evil-nerd-commenter
-  :general ("gc" #'evilnc-comment-or-uncomment-lines))
+  :general (:states 'normal "gc" #'evilnc-comment-or-uncomment-lines))
 
 ;; Make cursor theme match between gui emacs
 (use-package evil-terminal-cursor-changer
@@ -245,6 +255,9 @@
 
 ;; Fast, compiled terminal
 (use-package vterm
+  :general
+  (global-definer
+    "t" 'vterm)
   :elpaca (vterm :post-build
                  (progn
                    (setq vterm-always-compile-module t)
@@ -317,6 +330,7 @@
 
 ;; Enable lsp support
 (use-package eglot
+  :defer t
   :elpaca nil
   :hook ((prog-mode . (lambda ()
                          (unless (derived-mode-p 'emacs-lisp-mode 'lisp-mode 'makefile-mode 'snippet-mode)
@@ -371,15 +385,17 @@
   (setq git-link-open-in-browser t))
 
 ;; Allow viewing older git revisions
-(use-package git-timemachine)
+(use-package git-timemachine
+  :defer t)
 
 ;; Show git change information in the sign column
 (use-package git-gutter
+  :hook prog-mode
   :config (global-git-gutter-mode +1))
 
 ;; Treesitter installation/language mapping support
 (use-package treesit-auto
-  :init 
+  :config
   (setq treesit-auto-install 'prompt)
   (global-treesit-auto-mode))
 
@@ -413,8 +429,8 @@
 (use-package cape
   ;; Bind dedicated completion commands
   ;; Alternative prefix keys: C-c p, M-p, M-+, ...
-  :bind (
-    ("C-x C-o" . completion-at-point)) ;; capf
+  :general
+  (:states 'insert "C-x C-o" #'completion-at-point)
   :init
   ;; Add `completion-at-point-functions', used by `completion-at-point'.
   (add-to-list 'completion-at-point-functions #'cape-dabbrev)
