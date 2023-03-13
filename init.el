@@ -34,14 +34,29 @@
 (elpaca `(,@elpaca-order))
 
 ;;Utilities to debug startup time
-(setq use-package-compute-statistics t)
-(defun efs/display-startup-time ()
-  (message "Emacs loaded in %s with %d garbage collections."
-           (format "%.2f seconds"
-                   (float-time
-                   (time-subtract after-init-time before-init-time)))
-           gcs-done))
-(add-hook 'emacs-startup-hook #'efs/display-startup-time)
+
+
+;; (setq use-package-compute-statistics t)
+;; (defun efs/display-startup-time ()
+;;   (message "Emacs loaded in %s with %d garbage collections."
+;;            (format "%.2f seconds"
+;;                    (float-time
+;;                    (time-subtract after-init-time before-init-time)))
+;;            gcs-done))
+;; (add-hook 'emacs-startup-hook #'efs/display-startup-time)
+
+
+;; Pontification on startup time
+;; The principal contributors to startup time on an empty file are
+;; exec-path-from-shell - can statically build path once like doom env
+;; evil-collection      - can lazy load
+;; evil                 - the inevitable suffering of life
+;; treesit-auto         - *should* be able to lazy load
+;; general              - should replace eventually
+;; doom-themes          - stuck
+;; doom-modeline        - stuck
+;; corfu-terminal       - should be bundled in the upstream module
+;; Altogether this doesn't save that much... contribute to emacs core.
 
 ;; Install use-package support
 (elpaca elpaca-use-package
@@ -394,6 +409,7 @@
   :config (global-git-gutter-mode +1))
 
 ;; Treesitter installation/language mapping support
+;; TODO: remove once upstream has stabilized
 (use-package treesit-auto
   :config
   (setq treesit-auto-install 'prompt)
