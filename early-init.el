@@ -5,6 +5,10 @@
 
 (setq inhibit-default-init nil)
 
+;; Inhibit messages during the loading process to improve startup time and remove flicker
+(setq inhibit-message t)
+(add-hook 'elpaca-after-init-hook (lambda () (setq inhibit-message nil)))
+
 ; From prog
 (setq native-comp-async-report-warnings-errors nil)
 

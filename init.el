@@ -35,16 +35,15 @@
 
 ;;Utilities to debug startup time
 
-
 ;; (setq use-package-compute-statistics t)
 ;; (defun efs/display-startup-time ()
 ;;   (message "Emacs loaded in %s with %d garbage collections."
 ;;            (format "%.2f seconds"
 ;;                    (float-time
-;;                    (time-subtract after-init-time before-init-time)))
+;;                    (time-subtract (current-time) before-init-time)))
 ;;            gcs-done))
-;; (add-hook 'emacs-startup-hook #'efs/display-startup-time)
-
+;; (define-advice command-line-1 (:after (&rest _) run-after-init-hook)
+;;   (efs/display-startup-time))
 
 ;; Pontification on startup time
 ;; The principal contributors to startup time on an empty file are
@@ -67,7 +66,7 @@
 
 (elpaca-wait)
 
-;; Set up general - a keybinding manager 
+;; Set up general - a keybinding manager
 (use-package general
   :demand t
   :config
@@ -119,11 +118,6 @@
   (setq read-extended-command-predicate
         #'command-completion-default-include-p)
 
-  ;; Store recent files to allow c-o c-f to work
-  (recentf-mode 1)
-  (setq recentf-max-menu-items 100)
-  (setq recentf-max-saved-items 100)
-
   ;; Disable automatic documentation/signature help popup in minibuffer
   ;; TODO: eldoc-box does not work in terminal, and we can't set this per client
   ;; If you always want popups in the minibuffer, remove these lines
@@ -156,7 +150,6 @@
   (defun display-startup-echo-area-message () (message ()))
 
   ;; Suppress startup message
-  ;; TODO: does not work
   (setq inhibit-startup-echo-area-message user-login-name)
 
   ;; Associate rust files with rust-ts-mode
@@ -164,7 +157,23 @@
 
   ;; Enable mouse mode in terminal
   (unless (display-graphic-p)
-    (xterm-mouse-mode 1)))
+    (xterm-mouse-mode)))
+
+;; Store recent files to allow c-o c-f to work
+(use-package recentf
+  :elpaca nil
+  :hook pre-command-hook
+  :config
+  (recentf-mode)
+  (setq recentf-max-menu-items 100)
+  (setq recentf-max-saved-items 100))
+
+;; Persist history over Emacs restarts, include recentf.
+(use-package savehist
+  :elpaca nil
+  :hook pre-command-hook
+  :config
+  (savehist-mode))
 
 (use-package exec-path-from-shell
   :config
@@ -186,11 +195,6 @@
     "ds"   'consult-flymake)
 )
 
-;; Persist history over Emacs restarts, include recentf.
-(use-package savehist
-  :elpaca nil
-  :init
-  (savehist-mode))
 
 ;; Use doom one theme
 (use-package doom-themes
@@ -252,6 +256,7 @@
 
 ;; Additional evil bindings for other packages (e.g. vterm)
 (use-package evil-collection
+  :defer 1
   :after evil
   :config (evil-collection-init)
   :custom
@@ -452,3 +457,15 @@
   (add-to-list 'completion-at-point-functions #'cape-dabbrev)
   (add-to-list 'completion-at-point-functions #'cape-file)
   (add-to-list 'completion-at-point-functions #'cape-symbol))
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(safe-local-variable-values '((git-commit-major-mode . git-commit-elisp-text-mode))))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )

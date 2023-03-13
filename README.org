@@ -13,6 +13,8 @@ A starting point for Emacs that is:
 
 This repo is meant to be used as a starting point for your Emacs configuration; remove the things you don't use and add what you miss.
 
+If you are interested in a more full-featured, modular configuration. Please use [[https://github.com/doomemacs/doomemacs][Doom emacs]].
+
 ** Installation
 
 Kickstart.el at this time targets Emacs 29. If you are experiencing issues, please make sure you have the latest version.
