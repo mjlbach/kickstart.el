@@ -49,3 +49,6 @@ Each PR, especially those which increase the line count, should have a descripti
 - Emacs requires significantly more boilerplate in its plugins
 - Elisp (even native or byte-compiled elisp) is much slower than comparable scripting languages like javascript or luajit
 - Emacs is not designed with Vim bindings in mind, and requires emulation packages like evil
+
+** Attribution
+- Nicholas Vollmer (progfolio), Henrik Lissner (hlissner), and all the other configurations/README's I've ripped off.
